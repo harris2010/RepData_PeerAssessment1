@@ -1,10 +1,5 @@
+# Reproducible Research: Peer Assessment 1
 
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
 
 ##Introduction
 
@@ -13,14 +8,16 @@ output:
 
 ## Loading Requisite Libraries
 
-```{r}
+
+```r
 library(knitr)
 opts_chunk$set(echo = TRUE, results = 'hold')
 library(data.table)
 library(ggplot2) 
 ```
 ## Loading and preprocessing the data
-```{r}
+
+```r
 filename<-"activity.zip"
    if (!file.exists(filename)){
       fileURL<- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
@@ -36,32 +33,57 @@ filename<-"activity.zip"
 ```
 ## What is mean total number of steps taken per day?
 ### Calculating the total steps per day.
-```{r}
+
+```r
    stepsPerDay <- aggregate(steps ~ date, activity, sum)
    colnames(stepsPerDay) <- c("date","steps")
    head(stepsPerDay)
 ```
+
+```
+## <div class="kable-table">
+## 
+## date          steps
+## -----------  ------
+## 2012-10-02      126
+## 2012-10-03    11352
+## 2012-10-04    12116
+## 2012-10-05    13294
+## 2012-10-06    15420
+## 2012-10-07    11015
+## 
+## </div>
+```
 ###Generating the histogram to find the total steps taken per day
 
-```{r}
+
+```r
    ggplot(stepsPerDay, aes(x = steps)) + 
        geom_histogram(fill = "violet", binwidth = 1000) + 
         labs(title="Histogram of Steps Taken per Day", 
              x = "Number of Steps per Day", y = "Number of times in a day") + theme_bw()
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+
 
 
 ## Calculation of the mean steps taken per day
-```{r}
+
+```r
    stepsMean   <- mean(stepsPerDay$steps, na.rm=TRUE)
    stepsMedian <- median(stepsPerDay$steps, na.rm=TRUE)
    paste0("The mean is " ,stepsMean, "  and median is   ",stepsMedian)
 ```
 
+```
+## [1] "The mean is 10766.1886792453  and median is   10765"
+```
+
 
 ## What is the average daily activity pattern?
-```{r}
+
+```r
    stepsPerInterval <- aggregate(activity$steps, 
                                 by = list(interval = activity$interval),
                                 FUN=mean, na.rm=TRUE)
@@ -70,29 +92,39 @@ filename<-"activity.zip"
    colnames(stepsPerInterval) <- c("interval", "steps")
 ```
 ### Plotting the average across all days of Steps taken against 5 minute intervals of time 
-```{r}
+
+```r
    ggplot(stepsPerInterval, aes(x=interval, y=steps)) +   
         geom_line(color="red", size=1) +  
         labs(title="Average Daily Steps Taken", x="Interval", y="Number of steps") +  
         theme_bw()
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+
 
 
 ## Calculating Interval with the Maximum Steps
 
-```{r}
+
+```r
    maxInt <- stepsPerInterval[which.max(  
         stepsPerInterval$steps),]
    paste0("The ", maxInt[,1], "th interval has maximum ", maxInt[,2], " steps. ")
 ```
 
+```
+## [1] "The 835th interval has maximum 206.169811320755 steps. "
+```
+
 
 ## Imputing missing values
-```{r}
+
+```r
    misVals <- sum(is.na(activity$steps))
 ```
-```{r}
+
+```r
 na_fill <- function(data, pervalue) {
         na_index <- which(is.na(data$steps))
         na_replace <- unlist(lapply(na_index, FUN=function(idx){
@@ -110,13 +142,26 @@ activity_fill <- data.frame(
         interval = activity$interval)
 str(activity_fill)
 ```
+
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : num  1.717 0.3396 0.1321 0.1509 0.0755 ...
+##  $ date    : Date, format: "2012-10-01" "2012-10-01" ...
+##  $ interval: Factor w/ 288 levels "0","5","10","15",..: 1 2 3 4 5 6 7 8 9 10 ...
+```
 ### To check the success of filling missing values
-```{r}
+
+```r
 sum(is.na(activity_fill$steps))
+```
+
+```
+## [1] 0
 ```
 ### Zero output shows that there are NO MISSING VALUES.
 ## Plotting graph with the Imputed Values
-```{r}
+
+```r
 fill_stepsPerDay <- aggregate(steps ~ date, activity_fill, sum)
 colnames(fill_stepsPerDay) <- c("date","steps")
 
@@ -127,10 +172,13 @@ ggplot(fill_stepsPerDay, aes(x = steps)) +
              x = "Number of Steps per Day", y = "Number of times in a day(Count)") + theme_bw() 
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+
 
 
 ##Calculating and reporting the mean and median total number of steps taken per day.
-```{r}
+
+```r
 steps_meanFill   <- mean(fill_stepsPerDay$steps, na.rm=TRUE)
 steps_medianFill <- median(fill_stepsPerDay$steps, na.rm=TRUE)
 ```
@@ -143,7 +191,8 @@ The mean is print(steps_meanFill) and median is print(steps_medianFill).
 ####The mean and median post Imputing are now equal, the height of the peak has increased without affecting the predictions
 
 ## Are there differences in activity patterns between weekdays and weekends?
-```{r}
+
+```r
 wkdaystps <- function(data) {
     wkdaystps <- aggregate(data$steps, by=list(interval = data$interval),
                           FUN=mean, na.rm=T)
@@ -173,14 +222,16 @@ datBywkdays <- function(data) {
 datwkdays <- datBywkdays(activity_fill)
 ```
 ##Plotting of the Graph
-```{r}
+
+```r
 ggplot(datwkdays, aes(x=interval, y=steps)) + 
         geom_line(color="purple") + 
         facet_wrap(~ dayofweek, nrow=2, ncol=1) +
         labs(x="Interval", y="Number of steps") +
         theme_bw()
-
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
 
 
 ###The plot shows more even activities spread during weekend across most time intervals as compared to varying activity pattern during weekdays. Most of the weekdays activity  being below 100 steps for major period of interval.
